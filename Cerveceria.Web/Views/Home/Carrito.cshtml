@@ -1,0 +1,274 @@
+﻿@using Cerveceria.Web.Helper
+@model CarritoViewModel
+@{
+    ViewData["Title"] = "Carrito";
+    decimal Total = 0;
+}
+<style type="text/css">
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+
+    input[type=date]::-webkit-inner-spin-button,
+    input[type=date]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=date] {
+        -moz-appearance: textfield;
+    }
+
+    td {
+        height: 25px
+    }
+</style>
+<!---- cart items details--->
+<div class="container">
+    <div class="small-container cart-page table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th style="padding-left:90px">Cantidad</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var producto in Model.productosCarritos)
+                {
+                    <tr class="items">
+                        <td>
+                            <div class="cart-info">
+                                <img src="@producto.Imagen" alt="">
+                                <div>
+                                    <p>@producto.Descripcion</p>
+                                    <small>Precio: $@producto.Precio</small>
+                                    <br>
+                                    <a asp-controller="Home" asp-action="RemoverProductoCarrito" asp-route-id="@producto.Id">Remover</a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="col-3">
+                                <div class="row">
+                                    <a asp-controller="Home" asp-action="RestarAlCarrito" asp-route-id="@producto.Id" class="btn py-0 px-2">-</a>
+                                    <input asp-for="@producto.Cantidad" class="text-center" disabled />
+                                    <a asp-controller="Home" asp-action="AgregarAlCarrito" asp-route-id="@producto.Id" class="btn py-0 px-2">+</a>
+                                </div>
+                                <div class="row">
+                                    @if (producto.Id == Model.IdLimiteStock)
+                                    {
+                                        @Html.ValidationMessage("VerificarStock", new { @class = "text-danger" })
+
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td>$@producto.SubTotal.Value.ToString("0.00")</td>
+                        @{Total += (decimal)producto.SubTotal;}
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+
+        <div class="total-price pt-2">
+            <table>
+                <tr>
+                    <td>Total</td>
+                    <td id="totalPrecio">$@Total.ToString("0.00")</td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="col-6"></div>
+        <div class="col-3">
+            <a asp-controller="home" asp-action="ListarProductos" class="btn">Volver al listado</a>
+        </div>
+        @if (!User.Identity.IsAuthenticated)
+        {
+            <div class="col-3">
+                <button data-toggle="modal" data-target="#modalLoginCompras" class="btn">Comprar</button>
+            </div>
+        }
+        else
+        {
+            <div class="col-3">
+                <button data-toggle="modal" data-target="#modalCompras" class="btn">Comprar</button>
+            </div>
+        }
+
+    </div>
+
+    <!-- Modal LoginCompras-->
+    <div class="modal fade " id="modalLoginCompras" tabindex="-1" role="dialog" aria-labelledby="modalLoginComprasCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content " id="modalContenidoLoginCompras">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLoginComprasLongTitle">Login</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="login modal-body">
+                    <center>
+                        <form id="AjaxForm">
+                            <h1 class="h3 mb-3 font-weight-normal">Por favor, ingresa ahora con tu email para comprar.</h1>
+                            <div>
+                                <input id="user" class="form-control" placeholder="Ingrese su email" autofocus />
+                            </div>
+                            <div class="pt-3">
+                                <input id="pass" class="form-control" placeholder="Contraseña" autofocus type="password" />
+                            </div>
+                            <input class="btn btn-lg btn-primary btn-block mt-3" id="btnLogin" value="Ingresa a tu cuenta" type="submit">
+                            <div class="pt-2">
+                                @Html.ValidationMessage("login", new { @class = "text-danger" })
+                            </div>
+                        </form>
+                        <div>
+                            <label>
+                                ¿Aun no eres usuario?
+                            </label>
+                            <label>
+                                Comenza ahora mismo...
+                            </label>
+                            <button onclick="location.href='@Url.Action("Registrar", "Login")'" class="btn btn-outline-primary btn-block mt-3">Registrarme</button>
+                        </div>
+                        <div>
+                            <label>
+                                ¿Olvidaste tu contraseña? Recuperá tu cuenta <a asp-controller="Login" asp-action="RecuperarContraseña">Acá</a>
+                            </label>
+                        </div>
+                    </center>
+                </div>
+            </div>
+
+            <div class="modal-content collapse" id="modalContenidoCompras">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalComprasLongTitle">Compras</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="login modal-body">
+                    <center>
+                        ¿Estás seguro que deseas comprar?
+                    </center>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary btnComprar">Segurísimo!</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Modal Compras-->
+    <div class="modal fade " id="modalCompras" tabindex="-1" role="dialog" aria-labelledby="modalComprasCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalComprasLongTitle">Compras</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="login modal-body">
+                    <center>
+                        ¿Estás seguro que deseas comprar?
+                    </center>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary btnComprar">Segurísimo!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.slim.js"
+        integrity="sha256-HwWONEZrpuoh951cQD1ov2HUK5zA5DwJ1DNUXaM6FsY="
+        crossorigin="anonymous"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script>
+     $("#AjaxForm").submit(function (e) {
+        e.preventDefault();
+        $("#btnLogin").prop("disabled", true);
+        $.ajax({
+        url: "@Url.Action("LoginComprar", "Login")",
+        data: {
+            user: $("#user").val(),
+            pass: $('#pass').val()
+        },
+        type: "POST",
+
+        })
+        .done(function (result) {
+            var arrayResult = JSON.parse(result);
+            if (arrayResult["statusLogin"]) {
+                $("#btnLogin").prop("disabled", false);
+                $("#identityUser").text("Hola " + arrayResult["name"] );
+                $("#modalContenidoLoginCompras").hide();
+                $("#modalContenidoCompras").show();
+            } else {
+                $("#btnLogin").prop("disabled", false);
+                alert("El 'Usuario' o 'Contraseña' es incorrecto.");
+            }
+        });
+    });
+
+</script>
+<script>
+    function sweetBuyYes() {
+        $('#modalLoginCompras').modal('hide');
+        $('#modalCompras').modal('hide');
+        swal("Disfruta de tu compra!", "Nos estaremos comunicando con vos para acordar la entrega!", "success");
+    }
+
+    $('.btnComprar').on("click", function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("ComprarProducto", "Home")",
+            data: {},
+            success: function (result) {
+                var arrayResult = JSON.parse(result);
+                if (arrayResult) {
+                    $(".items").remove();
+                    var totalPrecio = document.getElementById("totalPrecio");
+                    totalPrecio.innerHTML = "";
+                    totalPrecio.innerHTML = "$0.00";
+                    sweetBuyYes();
+                } else {
+                    $(".btnComprar").prop("disabled", false);
+                    $("#modalContenidoLoginCompras").hide();
+                    $("#modalContenidoCompras").hide();
+                    alert('La compra no pudo ser realizada.');
+                }
+            },
+            error: function (result) {
+                $(".btnComprar").prop("disabled", false);
+                $("#modalContenidoLoginCompras").hide();
+                $("#modalContenidoCompras").hide();
+                alert('error');
+            }
+        });
+    });
+
+</script>
+
